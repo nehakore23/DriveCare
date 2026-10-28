@@ -2,10 +2,10 @@ package com.drivecare.service;
 
 import com.drivecare.entity.Role;
 import com.drivecare.entity.User;
+import com.drivecare.exception.ApiException;
 import com.drivecare.repository.UserRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import com.drivecare.dto.MechanicRegisterRequest;
 
 import java.util.List;
 
@@ -13,60 +13,26 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository,
-                       PasswordEncoder passwordEncoder) {
-
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
-    public User registerUser(User user) {
-
-        if (userRepository.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("Email already registered");
-        }
-
-        user.setPassword(
-                passwordEncoder.encode(user.getPassword())
-        );
-
-        // Normal registration se CUSTOMER hi create hoga
-        user.setRole(Role.CUSTOMER);
-
-        user.setStatus(true);
-
-        return userRepository.save(user);
-    }
-
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<User> getCustomers() {
+        return userRepository.findByRole(Role.CUSTOMER);
     }
 
     public User getUserById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                .orElseThrow(() -> new ApiException("User not found", HttpStatus.NOT_FOUND));
     }
-    public User registerMechanic(MechanicRegisterRequest request) {
 
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already registered");
+    public User updateCustomerStatus(Long id, boolean status) {
+        User user = getUserById(id);
+        if (user.getRole() != Role.CUSTOMER) {
+            throw new ApiException("Only customers can be updated here");
         }
-
-        User user = new User();
-
-        user.setName(request.getName());
-        user.setEmail(request.getEmail());
-        user.setPassword(
-                passwordEncoder.encode(request.getPassword())
-        );
-        user.setPhone(request.getPhone());
-
-        user.setRole(Role.MECHANIC);
-        user.setStatus(true);
-
+        user.setStatus(status);
         return userRepository.save(user);
     }
 }

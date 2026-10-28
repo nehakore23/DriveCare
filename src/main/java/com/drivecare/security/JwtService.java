@@ -2,6 +2,7 @@ package com.drivecare.security;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -11,13 +12,15 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    private static final String SECRET_KEY =
-            "DriveCareSecretKeyForJwtAuthentication2026";
+    private final SecretKey key;
+    private final long expirationMs;
 
-    private final SecretKey key =
-            Keys.hmacShaKeyFor(
-                    SECRET_KEY.getBytes(StandardCharsets.UTF_8)
-            );
+    public JwtService(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.expiration-ms:36000000}") long expirationMs) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.expirationMs = expirationMs;
+    }
 
     public String generateToken(String email, String role) {
 
@@ -25,10 +28,7 @@ public class JwtService {
                 .subject(email)
                 .claim("role", role)
                 .issuedAt(new Date())
-                .expiration(
-                        new Date(System.currentTimeMillis()
-                                + 1000 * 60 * 60 * 10)
-                )
+                .expiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(key)
                 .compact();
     }

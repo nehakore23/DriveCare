@@ -5,14 +5,16 @@ public class LoginResponse {
     private String token;
     private String role;
     private String name;
+    private Long userId;
 
     public LoginResponse() {
     }
 
-    public LoginResponse(String token, String role, String name) {
+    public LoginResponse(String token, String role, String name, Long userId) {
         this.token = token;
         this.role = role;
         this.name = name;
+        this.userId = userId;
     }
 
     public String getToken() {
@@ -37,5 +39,13 @@ public class LoginResponse {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 }
