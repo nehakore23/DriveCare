@@ -47,6 +47,7 @@ public class SecurityConfig {
                                 "/js/**",
                                 "/pages/**",
                                 "/api/auth/**",
+                                "/api/public/**",
                                 "/api/mechanic/login"
                         ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

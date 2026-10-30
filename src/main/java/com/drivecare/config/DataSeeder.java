@@ -64,6 +64,8 @@ public class DataSeeder implements CommandLineRunner {
         addService("Oil Change", "Engine oil and filter replacement", "1499");
         addService("Brake Service", "Brake pads, fluid and performance check", "1999");
         addService("AC Service", "AC gas, filter and cooling checkup", "1799");
+        addService("Premium Wash", "Exterior wash, interior vacuum and shine finish", "899");
+        addService("Engine Repair", "Engine diagnostics, tuning and performance repair", "3499");
     }
 
     private void addService(String name, String description, String price) {
