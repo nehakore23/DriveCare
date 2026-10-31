@@ -437,10 +437,12 @@ body {
 }
 
 .content {
+  width: 100%;
   max-width: 1600px;
+  margin: 0 auto;
   padding: 32px clamp(20px, 4vw, 65px) 55px;
+  align-self: start;
 }
-
 .content header {
   margin-bottom: 25px;
 }
