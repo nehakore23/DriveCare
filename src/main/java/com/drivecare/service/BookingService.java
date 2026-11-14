@@ -31,7 +31,7 @@ public class BookingService {
     private final UserRepository userRepository;
     private final MechanicRepository mechanicRepository;
     private final NotificationService notificationService;
-    private final PaymentService paymentService;
+   
 
     public BookingService(
             BookingRepository bookingRepository,
@@ -39,8 +39,7 @@ public class BookingService {
             ServiceRepository serviceRepository,
             UserRepository userRepository,
             MechanicRepository mechanicRepository,
-            NotificationService notificationService,
-            PaymentService paymentService) {
+            NotificationService notificationService) {
 
         this.bookingRepository = bookingRepository;
         this.vehicleRepository = vehicleRepository;
@@ -48,7 +47,6 @@ public class BookingService {
         this.userRepository = userRepository;
         this.mechanicRepository = mechanicRepository;
         this.notificationService = notificationService;
-        this.paymentService = paymentService;
     }
 
     public BookingResponse createBooking(BookingRequest request, String email) {
