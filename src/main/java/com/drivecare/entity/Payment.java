@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -35,6 +36,9 @@ public class Payment {
     private String receiptNumber;
 
     private LocalDateTime paidAt;
+    private String razorpayOrderId;
+
+    private String razorpayPaymentId;
 
     public Long getId() {
         return id;
@@ -92,6 +96,21 @@ public class Payment {
         this.receiptNumber = receiptNumber;
     }
 
+    public String getRazorpayOrderId() {
+        return razorpayOrderId;
+    }
+
+    public void setRazorpayOrderId(String razorpayOrderId) {
+        this.razorpayOrderId = razorpayOrderId;
+    }
+
+    public String getRazorpayPaymentId() {
+        return razorpayPaymentId;
+    }
+
+    public void setRazorpayPaymentId(String razorpayPaymentId) {
+        this.razorpayPaymentId = razorpayPaymentId;
+    }
     public LocalDateTime getPaidAt() {
         return paidAt;
     }
