@@ -201,7 +201,7 @@ public class BookingService {
         booking.setStatus(BookingStatus.COMPLETED);
         booking.setCompletedAt(LocalDateTime.now());
         Booking saved = bookingRepository.save(booking);
-        paymentService.createPaidReceipt(saved);
+       // paymentService.createPaidReceipt(saved);
         return BookingMapper.toResponse(saved);
     }
 

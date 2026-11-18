@@ -1,8 +1,6 @@
-
 package com.drivecare.service;
 
 import com.drivecare.dto.RazorpayOrderResponse;
-import com.drivecare.dto.RazorpayVerifyRequest;
 import com.drivecare.entity.Booking;
 import com.drivecare.entity.BookingStatus;
 import com.drivecare.entity.Payment;
@@ -12,16 +10,14 @@ import com.drivecare.exception.ApiException;
 import com.drivecare.repository.BookingRepository;
 import com.drivecare.repository.PaymentRepository;
 import com.drivecare.repository.UserRepository;
-
+import com.razorpay.Order;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 import com.razorpay.Utils;
-
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -35,63 +31,65 @@ public class PaymentService {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
 
-    private final String keyId;
-    private final String keySecret;
+    @Value("${razorpay.key.id}")
+    private String razorpayKeyId;
+
+    @Value("${razorpay.key.secret}")
+    private String razorpayKeySecret;
 
     public PaymentService(
             PaymentRepository paymentRepository,
             UserRepository userRepository,
-            BookingRepository bookingRepository,
-            @Value("${razorpay.key.id}") String keyId,
-            @Value("${razorpay.key.secret}") String keySecret) {
+            BookingRepository bookingRepository) {
 
         this.paymentRepository = paymentRepository;
         this.userRepository = userRepository;
         this.bookingRepository = bookingRepository;
-        this.keyId = keyId;
-        this.keySecret = keySecret;
     }
 
     // Create Razorpay Order
-    @Transactional
-    public RazorpayOrderResponse createOrder(Long bookingId, String email) {
+    public RazorpayOrderResponse createPaymentOrder(
+            Long bookingId,
+            String email) {
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ApiException(
-                        "User not found", HttpStatus.NOT_FOUND));
+                .orElseThrow(() ->
+                        new ApiException(
+                                "User not found",
+                                HttpStatus.NOT_FOUND
+                        ));
 
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new ApiException(
-                        "Booking not found", HttpStatus.NOT_FOUND));
+                .orElseThrow(() ->
+                        new ApiException(
+                                "Booking not found",
+                                HttpStatus.NOT_FOUND
+                        ));
 
-        // Verify booking ownership
+        // Check booking belongs to logged-in customer
         if (!booking.getCustomer().getId().equals(user.getId())) {
             throw new ApiException(
-                    "You cannot pay for another customer's booking",
-                    HttpStatus.FORBIDDEN);
+                    "You are not authorized to pay for this booking",
+                    HttpStatus.FORBIDDEN
+            );
         }
 
-        // Payment only after service completion
+        // Payment allowed only after service completion
         if (booking.getStatus() != BookingStatus.COMPLETED) {
             throw new ApiException(
-                    "Payment is allowed only after service completion");
+                    "Payment is allowed only after service completion",
+                    HttpStatus.BAD_REQUEST
+            );
         }
 
-        BigDecimal amount = booking.getTotalPrice();
+        // Validate amount
+        if (booking.getTotalPrice() == null ||
+                booking.getTotalPrice().compareTo(BigDecimal.ZERO) <= 0) {
 
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0
-                || amount.stripTrailingZeros().scale() > 2) {
-            throw new ApiException("Invalid booking amount");
-        }
-
-        long amountInPaise;
-
-        try {
-            amountInPaise = amount
-                    .movePointRight(2)
-                    .longValueExact();
-        } catch (ArithmeticException e) {
-            throw new ApiException("Invalid payment amount");
+            throw new ApiException(
+                    "Invalid booking amount",
+                    HttpStatus.BAD_REQUEST
+            );
         }
 
         // Check existing payment
@@ -99,190 +97,195 @@ public class PaymentService {
                 .findByBookingId(bookingId)
                 .orElse(null);
 
-        if (payment != null) {
+        // Already paid
+        if (payment != null &&
+                payment.getStatus() == PaymentStatus.PAID) {
 
-            if (payment.getStatus() == PaymentStatus.PAID) {
-                throw new ApiException(
-                        "This booking has already been paid",
-                        HttpStatus.CONFLICT);
-            }
-
-            // Reuse existing pending Razorpay order
-            if (payment.getRazorpayOrderId() != null) {
-                return new RazorpayOrderResponse(
-                        keyId,
-                        payment.getRazorpayOrderId(),
-                        amountInPaise,
-                        "INR",
-                        bookingId,
-                        payment.getId());
-            }
-
-        } else {
-
-            payment = new Payment();
-            payment.setBooking(booking);
-            payment.setCustomer(user);
-            payment.setAmount(amount);
-            payment.setStatus(PaymentStatus.PENDING);
-            payment.setMethod("RAZORPAY");
-            payment.setReceiptNumber(
-                    "DC-" + UUID.randomUUID()
-                            .toString().substring(0, 8).toUpperCase());
-
-            payment = paymentRepository.save(payment);
+            throw new ApiException(
+                    "Payment already completed for this booking",
+                    HttpStatus.BAD_REQUEST
+            );
         }
 
         try {
 
-            RazorpayClient client =
-                    new RazorpayClient(keyId, keySecret);
+            // Convert INR to paise
+            long amountInPaise = booking.getTotalPrice()
+                    .multiply(BigDecimal.valueOf(100))
+                    .longValueExact();
 
+            /*
+             * If a pending payment already has a Razorpay order,
+             * reuse that order instead of creating a duplicate order.
+             */
+            if (payment != null &&
+                    payment.getRazorpayOrderId() != null) {
+
+                return new RazorpayOrderResponse(
+                        razorpayKeyId,
+                        payment.getRazorpayOrderId(),
+                        bookingId,
+                        payment.getId(),
+                        amountInPaise,
+                        "INR"
+                );
+            }
+
+            // Create local payment record
+            if (payment == null) {
+
+                payment = new Payment();
+
+                payment.setBooking(booking);
+                payment.setCustomer(user);
+                payment.setAmount(booking.getTotalPrice());
+                payment.setStatus(PaymentStatus.PENDING);
+                payment.setMethod("RAZORPAY");
+
+                payment.setReceiptNumber(
+                        "DC-" +
+                                UUID.randomUUID()
+                                        .toString()
+                                        .substring(0, 8)
+                                        .toUpperCase()
+                );
+
+                payment = paymentRepository.save(payment);
+            }
+
+            // Create Razorpay client
+            RazorpayClient razorpayClient =
+                    new RazorpayClient(
+                            razorpayKeyId,
+                            razorpayKeySecret
+                    );
+
+            // Razorpay order request
             JSONObject orderRequest = new JSONObject();
 
             orderRequest.put("amount", amountInPaise);
             orderRequest.put("currency", "INR");
             orderRequest.put(
-                    "receipt", "DC-BOOKING-" + bookingId);
+                    "receipt",
+                    "booking_" + bookingId
+            );
 
-            com.razorpay.Order order =
-                    client.orders.create(orderRequest);
+            // Create Razorpay order
+            Order razorpayOrder =
+                    razorpayClient.orders.create(orderRequest);
 
-            String orderId = order.get("id");
+            String razorpayOrderId =
+                    razorpayOrder.get("id");
 
-            payment.setRazorpayOrderId(orderId);
-            payment.setMethod("RAZORPAY");
+            // Save Razorpay Order ID
+            payment.setRazorpayOrderId(razorpayOrderId);
 
             paymentRepository.save(payment);
 
+            // Return clean response to frontend
             return new RazorpayOrderResponse(
-                    keyId,
-                    orderId,
-                    amountInPaise,
-                    "INR",
+                    razorpayKeyId,
+                    razorpayOrderId,
                     bookingId,
-                    payment.getId());
+                    payment.getId(),
+                    amountInPaise,
+                    "INR"
+            );
 
         } catch (RazorpayException e) {
 
             throw new ApiException(
                     "Unable to create Razorpay order",
-                    HttpStatus.BAD_GATEWAY);
+                    HttpStatus.BAD_GATEWAY
+            );
+
+        } catch (ArithmeticException e) {
+
+            throw new ApiException(
+                    "Invalid payment amount",
+                    HttpStatus.BAD_REQUEST
+            );
         }
     }
 
     // Verify Razorpay Payment
-    @Transactional
     public Payment verifyPayment(
-            RazorpayVerifyRequest request,
+            String razorpayOrderId,
+            String razorpayPaymentId,
+            String razorpaySignature,
             String email) {
 
-        if (request == null
-                || request.getRazorpayOrderId() == null
-                || request.getRazorpayPaymentId() == null
-                || request.getRazorpaySignature() == null) {
-
-            throw new ApiException("Payment verification details are missing");
-        }
-
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ApiException(
-                        "User not found", HttpStatus.NOT_FOUND));
+                .orElseThrow(() ->
+                        new ApiException(
+                                "User not found",
+                                HttpStatus.NOT_FOUND
+                        ));
 
         Payment payment = paymentRepository
-                .findByRazorpayOrderId(request.getRazorpayOrderId())
-                .orElseThrow(() -> new ApiException(
-                        "Payment order not found", HttpStatus.NOT_FOUND));
+                .findByCustomerIdOrderByIdDesc(user.getId())
+                .stream()
+                .filter(p ->
+                        razorpayOrderId.equals(
+                                p.getRazorpayOrderId()
+                        ))
+                .findFirst()
+                .orElseThrow(() ->
+                        new ApiException(
+                                "Payment order not found",
+                                HttpStatus.NOT_FOUND
+                        ));
 
-        if (!payment.getCustomer().getId().equals(user.getId())) {
-            throw new ApiException(
-                    "Unauthorized payment verification",
-                    HttpStatus.FORBIDDEN);
+        // Already paid
+        if (payment.getStatus() == PaymentStatus.PAID) {
+            return payment;
         }
 
-        // Verify signature
+        // Verify Razorpay signature
         try {
 
-            JSONObject options = new JSONObject();
+            String payload =
+                    razorpayOrderId + "|" + razorpayPaymentId;
 
-            options.put(
-                    "razorpay_order_id",
-                    request.getRazorpayOrderId());
+            boolean isValid = Utils.verifySignature(
+                    payload,
+                    razorpaySignature,
+                    razorpayKeySecret
+            );
 
-            options.put(
-                    "razorpay_payment_id",
-                    request.getRazorpayPaymentId());
+            if (!isValid) {
 
-            options.put(
-                    "razorpay_signature",
-                    request.getRazorpaySignature());
-
-            boolean signatureValid =
-                    Utils.verifyPaymentSignature(options, keySecret);
-
-            if (!signatureValid) {
                 throw new ApiException(
                         "Invalid Razorpay payment signature",
-                        HttpStatus.BAD_REQUEST);
+                        HttpStatus.BAD_REQUEST
+                );
             }
 
-            // Idempotency: same successful payment can be verified again
-            if (payment.getStatus() == PaymentStatus.PAID) {
-
-                if (request.getRazorpayPaymentId()
-                        .equals(payment.getRazorpayPaymentId())) {
-                    return payment;
-                }
-
-                throw new ApiException(
-                        "This booking has already been paid",
-                        HttpStatus.CONFLICT);
-            }
-
-            // Fetch payment status directly from Razorpay
-            RazorpayClient client =
-                    new RazorpayClient(keyId, keySecret);
-
-            com.razorpay.Payment razorpayPayment =
-                    client.payments.fetch(
-                            request.getRazorpayPaymentId());
-
-            String razorpayStatus =
-                    String.valueOf(razorpayPayment.get("status"));
-
-            String razorpayOrderId =
-                    String.valueOf(razorpayPayment.get("order_id"));
-
-            long razorpayAmount =
-                    new BigDecimal(
-                            String.valueOf(razorpayPayment.get("amount")))
-                            .longValueExact();
-
-            long expectedAmount =
-                    payment.getAmount()
-                            .movePointRight(2)
-                            .longValueExact();
-
-            if (!"captured".equalsIgnoreCase(razorpayStatus)) {
-                throw new ApiException(
-                        "Payment is not captured yet",
-                        HttpStatus.BAD_REQUEST);
-            }
-
-            if (!request.getRazorpayOrderId().equals(razorpayOrderId)
-                    || razorpayAmount != expectedAmount) {
-
-                throw new ApiException(
-                        "Payment details do not match",
-                        HttpStatus.BAD_REQUEST);
-            }
-
-            // Mark payment as PAID only after verification
-            payment.setStatus(PaymentStatus.PAID);
-            payment.setMethod("RAZORPAY");
+            // Mark payment as paid only after successful verification
             payment.setRazorpayPaymentId(
-                    request.getRazorpayPaymentId());
-            payment.setPaidAt(LocalDateTime.now());
+                    razorpayPaymentId
+            );
+
+            payment.setStatus(
+                    PaymentStatus.PAID
+            );
+
+            payment.setMethod("RAZORPAY");
+
+            payment.setPaidAt(
+                    LocalDateTime.now()
+            );
+
+            if (payment.getReceiptNumber() == null) {
+
+                payment.setReceiptNumber(
+                        "DC-" +
+                                UUID.randomUUID()
+                                        .toString()
+                                        .substring(0, 8)
+                                        .toUpperCase()
+                );
+            }
 
             return paymentRepository.save(payment);
 
@@ -290,21 +293,31 @@ public class PaymentService {
 
             throw new ApiException(
                     "Unable to verify Razorpay payment",
-                    HttpStatus.BAD_GATEWAY);
+                    HttpStatus.BAD_GATEWAY
+            );
         }
     }
 
-    public List<Payment> getCustomerPayments(String email) {
+    // Customer payment history
+    public List<Payment> getCustomerPayments(
+            String email) {
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ApiException(
-                        "User not found", HttpStatus.NOT_FOUND));
+                .orElseThrow(() ->
+                        new ApiException(
+                                "User not found",
+                                HttpStatus.NOT_FOUND
+                        ));
 
         return paymentRepository
-                .findByCustomerIdOrderByIdDesc(user.getId());
+                .findByCustomerIdOrderByIdDesc(
+                        user.getId()
+                );
     }
 
+    // Admin payment history
     public List<Payment> getAllPayments() {
+
         return paymentRepository.findAll();
     }
 }

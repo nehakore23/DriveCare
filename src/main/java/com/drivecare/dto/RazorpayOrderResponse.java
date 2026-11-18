@@ -1,27 +1,31 @@
-
 package com.drivecare.dto;
 
 public class RazorpayOrderResponse {
 
     private String keyId;
     private String orderId;
-    private Long amount;
-    private String currency;
     private Long bookingId;
     private Long paymentId;
+    private Long amount;
+    private String currency;
 
     public RazorpayOrderResponse() {
     }
 
-    public RazorpayOrderResponse(String keyId, String orderId,
-                                 Long amount, String currency,
-                                 Long bookingId, Long paymentId) {
+    public RazorpayOrderResponse(
+            String keyId,
+            String orderId,
+            Long bookingId,
+            Long paymentId,
+            Long amount,
+            String currency) {
+
         this.keyId = keyId;
         this.orderId = orderId;
-        this.amount = amount;
-        this.currency = currency;
         this.bookingId = bookingId;
         this.paymentId = paymentId;
+        this.amount = amount;
+        this.currency = currency;
     }
 
     public String getKeyId() {
@@ -40,22 +44,6 @@ public class RazorpayOrderResponse {
         this.orderId = orderId;
     }
 
-    public Long getAmount() {
-        return amount;
-    }
-
-    public void setAmount(Long amount) {
-        this.amount = amount;
-    }
-
-    public String getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(String currency) {
-        this.currency = currency;
-    }
-
     public Long getBookingId() {
         return bookingId;
     }
@@ -70,5 +58,21 @@ public class RazorpayOrderResponse {
 
     public void setPaymentId(Long paymentId) {
         this.paymentId = paymentId;
+    }
+
+    public Long getAmount() {
+        return amount;
+    }
+
+    public void setAmount(Long amount) {
+        this.amount = amount;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
     }
 }

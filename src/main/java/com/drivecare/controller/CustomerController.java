@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.drivecare.dto.RazorpayOrderResponse;
+import com.drivecare.dto.RazorpayVerifyRequest;
 
 import java.util.List;
 import java.util.Map;
@@ -90,6 +92,29 @@ public class CustomerController {
         return bookingService.cancelBooking(id, authentication.getName());
     }
 
+    @PostMapping("/bookings/{id}/payment/order")
+    public RazorpayOrderResponse createPaymentOrder(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        return paymentService.createPaymentOrder(
+                id,
+                authentication.getName()
+        );
+    }
+
+    @PostMapping("/payments/verify")
+    public Payment verifyPayment(
+            @RequestBody RazorpayVerifyRequest request,
+            Authentication authentication) {
+
+        return paymentService.verifyPayment(
+                request.getRazorpayOrderId(),
+                request.getRazorpayPaymentId(),
+                request.getRazorpaySignature(),
+                authentication.getName()
+        );
+    }
     @GetMapping("/payments")
     public List<Payment> payments(Authentication authentication) {
         return paymentService.getCustomerPayments(authentication.getName());

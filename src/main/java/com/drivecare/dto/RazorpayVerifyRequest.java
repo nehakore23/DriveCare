@@ -1,4 +1,3 @@
-
 package com.drivecare.dto;
 
 public class RazorpayVerifyRequest {
@@ -6,6 +5,9 @@ public class RazorpayVerifyRequest {
     private String razorpayOrderId;
     private String razorpayPaymentId;
     private String razorpaySignature;
+
+    public RazorpayVerifyRequest() {
+    }
 
     public String getRazorpayOrderId() {
         return razorpayOrderId;
