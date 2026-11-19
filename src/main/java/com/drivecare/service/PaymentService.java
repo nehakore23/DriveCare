@@ -94,7 +94,7 @@ public class PaymentService {
 
         // Check existing payment
         Payment payment = paymentRepository
-                .findByBookingId(bookingId)
+                .findByBooking_Id(bookingId)
                 .orElse(null);
 
         // Already paid

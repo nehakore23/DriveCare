@@ -3,8 +3,6 @@ package com.drivecare.repository;
 import com.drivecare.entity.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import java.util.Optional;
-import com.drivecare.entity.Payment;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -12,12 +10,12 @@ import java.util.Optional;
 
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
-    Optional<Payment> findByBookingId(Long bookingId);
+    Optional<Payment> findByBooking_Id(Long bookingId);
 
     List<Payment> findByCustomerIdOrderByIdDesc(Long customerId);
 
     @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Payment p WHERE p.status = com.drivecare.entity.PaymentStatus.PAID")
     BigDecimal totalPaidRevenue();
-    
+
     Optional<Payment> findByRazorpayOrderId(String razorpayOrderId);
 }
