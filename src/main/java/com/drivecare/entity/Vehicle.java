@@ -1,3 +1,4 @@
+
 package com.drivecare.entity;
 
 import jakarta.persistence.*;
@@ -11,14 +12,14 @@ public class Vehicle {
     private Long id;
 
     private String vehicleNumber;
-
     private String brand;
-
     private String model;
-
     private Integer year;
-
     private String fuelType;
+
+    // Vehicle image path
+    @Column(length = 500)
+    private String imageUrl;
 
     // Many vehicles can belong to one customer
     @ManyToOne
@@ -30,13 +31,14 @@ public class Vehicle {
 
     public Vehicle(Long id, String vehicleNumber, String brand,
                    String model, Integer year, String fuelType,
-                   User user) {
+                   String imageUrl, User user) {
         this.id = id;
         this.vehicleNumber = vehicleNumber;
         this.brand = brand;
         this.model = model;
         this.year = year;
         this.fuelType = fuelType;
+        this.imageUrl = imageUrl;
         this.user = user;
     }
 
@@ -86,6 +88,14 @@ public class Vehicle {
 
     public void setFuelType(String fuelType) {
         this.fuelType = fuelType;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public User getUser() {

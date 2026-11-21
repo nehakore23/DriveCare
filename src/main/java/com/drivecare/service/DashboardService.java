@@ -100,7 +100,7 @@ public class DashboardService {
         data.put("activeService", active);
         data.put("serviceHistory", history);
         data.put("payments", paymentRepository.findByCustomerIdOrderByIdDesc(user.getId()));
-        data.put("reviews", reviewRepository.findByCustomerIdOrderByCreatedAtDesc(user.getId()));
+        data.put("reviews", reviewRepository.findByCustomer_IdOrderByCreatedAtDesc(user.getId()));
         return data;
     }
 

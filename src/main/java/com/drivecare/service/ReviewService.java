@@ -47,7 +47,7 @@ public class ReviewService {
         if (request.getRating() < 1 || request.getRating() > 5) {
             throw new ApiException("Rating must be between 1 and 5");
         }
-        if (reviewRepository.findByBookingId(booking.getId()).isPresent()) {
+        if (reviewRepository.findByBooking_Id(booking.getId()).isPresent()) {
             throw new ApiException("Review already submitted for this booking");
         }
 
@@ -64,7 +64,7 @@ public class ReviewService {
     public List<Review> getCustomerReviews(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ApiException("User not found", HttpStatus.NOT_FOUND));
-        return reviewRepository.findByCustomerIdOrderByCreatedAtDesc(user.getId());
+        return reviewRepository.findByCustomer_IdOrderByCreatedAtDesc(user.getId());
     }
 
     public List<Review> getAllReviews() {

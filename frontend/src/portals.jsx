@@ -115,7 +115,31 @@ export function AdminPortal({ token, page }) {
               {bookings.map((booking) => (
                 <tr key={booking.id}>
                   <td>#{booking.id}<br /><b>{booking.serviceName}</b><br /><small>{rupees(booking.totalPrice)}</small></td>
-                  <td>{booking.customerName}<br /><small>{booking.vehicleBrand} {booking.vehicleModel} · {booking.vehicleNumber}</small></td>
+                  <td>
+  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+    <img
+      src={
+        booking.vehicleImageUrl
+          ? booking.vehicleImageUrl.startsWith("http")
+            ? booking.vehicleImageUrl
+            : `${import.meta.env.VITE_API_URL || "http://localhost:8080"}${booking.vehicleImageUrl}`
+          : "/images/default-vehicle.png"
+      }
+      alt="Vehicle"
+      style={{
+        width: "65px",
+        height: "45px",
+        objectFit: "cover",
+        borderRadius: "6px"
+      }}
+    />
+    <div>
+      {booking.customerName}
+      <br />
+      <small>{booking.vehicleBrand} {booking.vehicleModel} · {booking.vehicleNumber}</small>
+    </div>
+  </div>
+</td>
                   <td>{booking.bookingDate}<br /><small>{timeLabel(booking.bookingTime)}</small></td>
                   <td><Status value={booking.status} /></td>
                   <td>
@@ -648,32 +672,153 @@ function AdminServices({ token, services, reload }) {
   );
 }
 
+
 function Vehicles({ token, vehicles, reload }) {
   const { toast } = useFeedback();
-  const [form, setForm] = useState({ vehicleNumber: "", brand: "", model: "", year: "", fuelType: "" });
+
+  const [form, setForm] = useState({
+    vehicleNumber: "",
+    brand: "",
+    model: "",
+    year: "",
+    fuelType: "",
+  });
+
+  const [imageFile, setImageFile] = useState(null);
+  const [saving, setSaving] = useState(false);
+
   const submit = async (e) => {
     e.preventDefault();
+
     try {
-      await api("/api/customer/vehicles", { method: "POST", token, body: { ...form, year: form.year ? Number(form.year) : null } });
-      setForm({ vehicleNumber: "", brand: "", model: "", year: "", fuelType: "" });
-      toast("Vehicle added to your garage.");
-      reload();
+      setSaving(true);
+
+      // First create vehicle
+      const vehicle = await api("/api/customer/vehicles", {
+        method: "POST",
+        token,
+        body: {
+          ...form,
+          year: form.year ? Number(form.year) : null,
+        },
+      });
+
+      // Upload photo only when customer selects one
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append("file", imageFile);
+
+        await api(`/api/customer/vehicles/${vehicle.id}/image`, {
+          method: "POST",
+          token,
+          body: formData,
+        });
+      }
+
+      setForm({
+        vehicleNumber: "",
+        brand: "",
+        model: "",
+        year: "",
+        fuelType: "",
+      });
+
+      setImageFile(null);
+      toast("Vehicle added successfully.");
+      await reload();
+
     } catch (err) {
       toast(err.message, "error");
+    } finally {
+      setSaving(false);
     }
   };
+
+  const imageBase = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
   return (
     <>
       <Card>
-        <Section title="Add a vehicle" />
-        <Form fields={[["vehicleNumber", "Registration number"], ["brand", "Brand"], ["model", "Model"], ["year", "Year", "number"], ["fuelType", "Fuel type"]]} form={form} setForm={setForm} onSubmit={submit} button="Add vehicle" />
+        <Section
+          title="Add a vehicle"
+          text="Add your vehicle details and upload its photo (optional)."
+        />
+
+        <Form
+          fields={[
+            ["vehicleNumber", "Registration number"],
+            ["brand", "Brand"],
+            ["model", "Model"],
+            ["year", "Year", "number"],
+            ["fuelType", "Fuel type"],
+          ]}
+          form={form}
+          setForm={setForm}
+          onSubmit={submit}
+          button={saving ? "Saving..." : "Add vehicle"}
+        />
+
+        <div className="form-grid">
+          <label className="full">
+            Vehicle photo (optional)
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(e) =>
+                setImageFile(e.target.files?.[0] || null)
+              }
+            />
+          </label>
+
+          {imageFile && (
+            <p className="full">
+              Selected photo: {imageFile.name}
+            </p>
+          )}
+        </div>
       </Card>
-      <List title="My garage" items={vehicles} render={(vehicle) => (
-        <><b>{vehicle.brand} {vehicle.model}</b><span>{vehicle.vehicleNumber} · {vehicle.year || "—"} · {vehicle.fuelType || "—"}</span></>
-      )} />
+
+      <List
+        title="My garage"
+        items={vehicles}
+        render={(vehicle) => {
+          const imageUrl = vehicle.imageUrl
+            ? vehicle.imageUrl.startsWith("http")
+              ? vehicle.imageUrl
+              : `${imageBase}${vehicle.imageUrl}`
+            : "/images/default-vehicle.png";
+
+          return (
+            <div className="vehicle-row">
+              <img
+                src={imageUrl}
+                alt={`${vehicle.brand} ${vehicle.model}`}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = "/images/default-vehicle.png";
+                }}
+                style={{
+                  width: "90px",
+                  height: "65px",
+                  objectFit: "cover",
+                  borderRadius: "10px",
+                }}
+              />
+
+              <div>
+                <b>{vehicle.brand} {vehicle.model}</b>
+                <span>
+                  {vehicle.vehicleNumber} · {vehicle.year || "—"} · {vehicle.fuelType || "—"}
+                </span>
+              </div>
+            </div>
+          );
+        }}
+      />
     </>
   );
 }
+
 
 function CustomerBookings({ token, data, reload }) {
   const { toast, confirm } = useFeedback();

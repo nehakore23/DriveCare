@@ -21,6 +21,7 @@ public final class BookingMapper {
             response.setVehicleNumber(booking.getVehicle().getVehicleNumber());
             response.setVehicleBrand(booking.getVehicle().getBrand());
             response.setVehicleModel(booking.getVehicle().getModel());
+            response.setVehicleImageUrl(booking.getVehicle().getImageUrl());
         }
         if (booking.getService() != null) {
             response.setServiceId(booking.getService().getId());

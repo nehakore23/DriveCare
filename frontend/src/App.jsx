@@ -1,5 +1,5 @@
 import LandingPage from "./LandingPage";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import {
   Bell, Calendar, Car, ClipboardList, IndianRupee, LayoutDashboard, LogOut, Star, Users, Wrench,
 } from "lucide-react";
@@ -148,10 +148,65 @@ function AppShell() {
   );
 }
 
-export default function App() {
+function SplashScreen() {
   return (
-    <FeedbackProvider>
-      <AppShell />
-    </FeedbackProvider>
+    <div className="splash-screen">
+      <div className="splash-content">
+
+        <div className="splash-logo">
+          <img
+            src="/drivecare-mark.svg"
+            alt="DriveCare Logo"
+          />
+        </div>
+
+        <h1>
+          Drive<span>Care</span>
+        </h1>
+
+        <p className="splash-tagline">
+          Your Journey, Our Responsibility
+        </p>
+
+        <div className="splash-loader">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+
+        <p className="splash-loading">
+          Preparing your experience...
+        </p>
+
+      </div>
+
+      <div className="splash-footer">
+        PREMIUM VEHICLE CARE
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2200);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <>
+      {showSplash ? (
+        <SplashScreen />
+      ) : (
+        <FeedbackProvider>
+          <AppShell />
+        </FeedbackProvider>
+      )}
+    </>
   );
 }

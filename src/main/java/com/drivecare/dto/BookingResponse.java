@@ -17,6 +17,7 @@ public class BookingResponse {
     private String vehicleNumber;
     private String vehicleBrand;
     private String vehicleModel;
+    private String vehicleImageUrl;
     private Long serviceId;
     private String serviceName;
     private Long mechanicId;
@@ -95,6 +96,13 @@ public class BookingResponse {
 
     public void setVehicleModel(String vehicleModel) {
         this.vehicleModel = vehicleModel;
+    }
+    public String getVehicleImageUrl() {
+        return vehicleImageUrl;
+    }
+
+    public void setVehicleImageUrl(String vehicleImageUrl) {
+        this.vehicleImageUrl = vehicleImageUrl;
     }
 
     public Long getServiceId() {

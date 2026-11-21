@@ -40,16 +40,17 @@ public class SecurityConfig {
                             response.getWriter().write("{\"message\":\"You do not have permission for this resource\"}");
                         }))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/",
-                                "/index.html",
-                                "/css/**",
-                                "/js/**",
-                                "/pages/**",
-                                "/api/auth/**",
-                                "/api/public/**",
-                                "/api/mechanic/login"
-                        ).permitAll()
+                		.requestMatchers(
+                		        "/",
+                		        "/index.html",
+                		        "/css/**",
+                		        "/js/**",
+                		        "/pages/**",
+                		        "/uploads/vehicles/**",
+                		        "/api/auth/**",
+                		        "/api/public/**",
+                		        "/api/mechanic/login"
+                		).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
                         .requestMatchers("/api/mechanic/**").hasRole("MECHANIC")

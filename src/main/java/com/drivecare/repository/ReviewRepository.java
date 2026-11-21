@@ -9,9 +9,9 @@ import java.util.Optional;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
-    Optional<Review> findByBookingId(Long bookingId);
+    Optional<Review> findByBooking_Id(Long bookingId);
 
-    List<Review> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
+    List<Review> findByCustomer_IdOrderByCreatedAtDesc(Long customerId);
 
     @Query("SELECT r.mechanic.id, AVG(r.rating) FROM Review r WHERE r.mechanic IS NOT NULL GROUP BY r.mechanic.id")
     List<Object[]> averageRatingByMechanic();

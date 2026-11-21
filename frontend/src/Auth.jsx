@@ -72,12 +72,7 @@ export default function Auth({ mode, setMode, onSuccess, onHome, afterAuth }) {
           </button>
         </form>
         <button type="button" className="link-button" onClick={onHome}>Back to homepage</button>
-        <div className="demo">
-          <b>Demo credentials</b><br />
-          Admin: admin@drivecare.com / admin123<br />
-          Customer: neha@drivecare.com / neha123<br />
-          Mechanic: rahul@drivecare.com / rahul123
-        </div>
+        
       </Card>
       <div className="auth-photo" style={{ backgroundImage: `url(${IMAGES.mechanic})` }} aria-hidden="true" />
     </main>

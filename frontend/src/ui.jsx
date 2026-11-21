@@ -146,7 +146,14 @@ export function ProgressTracker({ status, compact = false }) {
   );
 }
 
+
 export function BookingCard({ booking, action, extra }) {
+ const vehicleImage = booking.vehicleImageUrl
+  ? booking.vehicleImageUrl.startsWith("http")
+    ? booking.vehicleImageUrl
+    : `http://localhost:8080${booking.vehicleImageUrl}`
+  : IMAGES.car;
+
   return (
     <article className="booking-card">
       <div className="job-icon"><Car size={20} /></div>
@@ -166,11 +173,19 @@ export function BookingCard({ booking, action, extra }) {
         {booking.mechanicNotes && <p className="notes">{booking.mechanicNotes}</p>}
         {extra}
       </div>
-      <div className="vehicle-thumb" style={{ backgroundImage: `linear-gradient(90deg, rgba(11,31,58,.08), transparent), url(${IMAGES.car})` }} />
+
+  <div
+  className="vehicle-thumb"
+  style={{
+    backgroundImage: `linear-gradient(90deg, rgba(11,31,58,.08), transparent), url("${vehicleImage}")`
+  }}
+/>
+
       {action}
     </article>
   );
 }
+
 
 export function Toolbar({ query, setQuery, placeholder, children }) {
   return (
