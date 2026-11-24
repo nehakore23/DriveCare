@@ -222,7 +222,10 @@ export function CustomerPortal({ token, page, go }) {
             {tracked ? (
               <>
                 <p className="tracked-label">{tracked.serviceName} · {tracked.vehicleNumber}</p>
-                <ProgressTracker status={tracked.status} />
+               <ProgressTracker
+  status={tracked.status}
+  booking={tracked}
+/>
                 <BookingCard booking={tracked} />
               </>
             ) : (

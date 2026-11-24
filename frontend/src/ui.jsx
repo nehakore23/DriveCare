@@ -129,30 +129,81 @@ export function Metric({ label, value }) {
   );
 }
 
-export function ProgressTracker({ status, compact = false }) {
+export function ProgressTracker({ status, booking = {}, compact = false }) {
   if (status === "CANCELLED") {
-    return <p className="progress-cancelled">This booking was cancelled.</p>;
+    return (
+      <p className="progress-cancelled">
+        This booking was cancelled.
+      </p>
+    );
   }
+
+  const steps = [
+    { key: "PENDING", label: "Booking Confirmed", date: booking.createdAt },
+    { key: "ASSIGNED", label: "Mechanic Assigned", date: booking.assignedAt },
+    { key: "IN_PROGRESS", label: "Service Started", date: booking.startedAt },
+    { key: "COMPLETED", label: "Service Completed", date: booking.completedAt },
+  ];
+
   const current = stepIndex(status);
+
+  const formatDate = (value) => {
+    if (!value) return "";
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "";
+
+    return date.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   return (
-    <ol className={`progress-track ${compact ? "compact" : ""}`} aria-label="Service progress">
-      {STEPS.map((step, index) => (
-        <li key={step} className={index <= current ? "done" : ""}>
-          <span>{index + 1}</span>
-          <small>{statusLabel(step)}</small>
-        </li>
-      ))}
+    <ol
+      className={`service-timeline ${compact ? "compact" : ""}`}
+      aria-label="Service progress"
+    >
+      {steps.map((step, index) => {
+        const isDone = index < current || status === "COMPLETED";
+        const isActive = index === current;
+
+        return (
+          <li
+            key={step.key}
+            className={`${isDone ? "done" : ""} ${isActive ? "active" : ""}`}
+          >
+            <span className="timeline-marker">
+              {isDone ? "✓" : index + 1}
+            </span>
+
+            <div className="timeline-content">
+              <strong>{step.label}</strong>
+
+              <small>
+                {isDone
+                  ? formatDate(step.date) || "Completed"
+                  : isActive
+                    ? "Current status"
+                    : "Pending"}
+              </small>
+            </div>
+          </li>
+        );
+      })}
     </ol>
   );
 }
 
-
 export function BookingCard({ booking, action, extra }) {
- const vehicleImage = booking.vehicleImageUrl
-  ? booking.vehicleImageUrl.startsWith("http")
-    ? booking.vehicleImageUrl
-    : `http://localhost:8080${booking.vehicleImageUrl}`
-  : IMAGES.car;
+  const vehicleImage = booking.vehicleImageUrl
+    ? booking.vehicleImageUrl.startsWith("http")
+      ? booking.vehicleImageUrl
+      : `http://localhost:8080${booking.vehicleImageUrl}`
+    : IMAGES.car;
 
   return (
     <article className="booking-card">
@@ -164,28 +215,21 @@ export function BookingCard({ booking, action, extra }) {
           {booking.customerName && <><b>{booking.customerName}</b> · </>}
           {booking.vehicleBrand} {booking.vehicleModel} · {booking.vehicleNumber}
         </p>
-        <small>
-          {booking.bookingDate} · {timeLabel(booking.bookingTime)}
-          {booking.totalPrice != null ? ` · ${rupees(booking.totalPrice)}` : ""}
-          {booking.mechanicName ? ` · Mechanic: ${booking.mechanicName}` : " · Mechanic pending"}
-        </small>
-        <ProgressTracker status={booking.status} compact />
         {booking.mechanicNotes && <p className="notes">{booking.mechanicNotes}</p>}
         {extra}
       </div>
 
-  <div
-  className="vehicle-thumb"
-  style={{
-    backgroundImage: `linear-gradient(90deg, rgba(11,31,58,.08), transparent), url("${vehicleImage}")`
-  }}
-/>
+      <div
+        className="vehicle-thumb"
+        style={{
+          backgroundImage: `linear-gradient(90deg, rgba(11,31,58,.08), transparent), url("${vehicleImage}")`
+        }}
+      />
 
       {action}
     </article>
   );
 }
-
 
 export function Toolbar({ query, setQuery, placeholder, children }) {
   return (

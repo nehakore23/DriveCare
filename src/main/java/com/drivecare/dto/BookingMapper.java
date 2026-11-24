@@ -42,6 +42,7 @@ public final class BookingMapper {
         response.setAssignedAt(booking.getAssignedAt());
         response.setStartedAt(booking.getStartedAt());
         response.setCompletedAt(booking.getCompletedAt());
+        response.setCreatedAt(booking.getCreatedAt());
         return response;
     }
 

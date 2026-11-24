@@ -33,6 +33,7 @@ public class BookingResponse {
     private LocalDateTime assignedAt;
     private LocalDateTime startedAt;
     private LocalDateTime completedAt;
+    private LocalDateTime createdAt;
 
     public Long getId() {
         return id;
@@ -223,5 +224,12 @@ public class BookingResponse {
 
     public void setCompletedAt(LocalDateTime completedAt) {
         this.completedAt = completedAt;
+    }
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }
