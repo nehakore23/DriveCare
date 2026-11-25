@@ -126,12 +126,16 @@ export function AdminPortal({ token, page }) {
           : "/images/default-vehicle.png"
       }
       alt="Vehicle"
-      style={{
-        width: "65px",
-        height: "45px",
-        objectFit: "cover",
-        borderRadius: "6px"
-      }}
+     style={{
+  width: "110px",
+  height: "80px",
+  objectFit: "contain",
+  objectPosition: "center",
+  backgroundColor: "#f5f6f8",
+  borderRadius: "8px",
+  padding: "4px",
+  flexShrink: 0
+}}
     />
     <div>
       {booking.customerName}
@@ -306,7 +310,9 @@ export function MechanicPortal({ token, page }) {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+  load();
+}, [token]);
   if (error) return <ErrorView message={error} onRetry={load} />;
   if (!data.dashboard) return <Loading />;
 
@@ -800,12 +806,16 @@ function Vehicles({ token, vehicles, reload }) {
                   e.currentTarget.onerror = null;
                   e.currentTarget.src = "/images/default-vehicle.png";
                 }}
-                style={{
-                  width: "90px",
-                  height: "65px",
-                  objectFit: "cover",
-                  borderRadius: "10px",
-                }}
+              style={{
+  width: "140px",
+  height: "100px",
+  objectFit: "contain",
+  objectPosition: "center",
+  backgroundColor: "#f5f6f8",
+  borderRadius: "10px",
+  padding: "5px",
+  flexShrink: 0
+}}
               />
 
               <div>

@@ -47,6 +47,36 @@ public class PaymentService {
         this.bookingRepository = bookingRepository;
     }
 
+ // Create Pending Payment after mechanic completes the job
+ public Payment createPendingPayment(Booking booking) {
+
+     // Check if payment already exists
+     Payment existingPayment = paymentRepository
+             .findByBooking_Id(booking.getId())
+             .orElse(null);
+
+     if (existingPayment != null) {
+         return existingPayment;
+     }
+
+     Payment payment = new Payment();
+
+     payment.setBooking(booking);
+     payment.setCustomer(booking.getCustomer());
+     payment.setAmount(booking.getTotalPrice());
+     payment.setStatus(PaymentStatus.PENDING);
+     payment.setMethod("RAZORPAY");
+
+     payment.setReceiptNumber(
+             "DC-" + UUID.randomUUID()
+                     .toString()
+                     .substring(0, 8)
+                     .toUpperCase()
+     );
+
+     return paymentRepository.save(payment);
+ }
+
     // Create Razorpay Order
     public RazorpayOrderResponse createPaymentOrder(
             Long bookingId,

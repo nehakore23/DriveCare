@@ -21,6 +21,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import com.drivecare.entity.Payment;
+import com.drivecare.entity.PaymentStatus;
+import java.util.UUID;
 
 @Service
 public class BookingService {
@@ -31,6 +34,8 @@ public class BookingService {
     private final UserRepository userRepository;
     private final MechanicRepository mechanicRepository;
     private final NotificationService notificationService;
+    private final PaymentService paymentService;
+    
    
 
     public BookingService(
@@ -39,7 +44,8 @@ public class BookingService {
             ServiceRepository serviceRepository,
             UserRepository userRepository,
             MechanicRepository mechanicRepository,
-            NotificationService notificationService) {
+            NotificationService notificationService,
+            PaymentService paymentService) {
 
         this.bookingRepository = bookingRepository;
         this.vehicleRepository = vehicleRepository;
@@ -47,6 +53,7 @@ public class BookingService {
         this.userRepository = userRepository;
         this.mechanicRepository = mechanicRepository;
         this.notificationService = notificationService;
+        this.paymentService = paymentService;
     }
 
     public BookingResponse createBooking(BookingRequest request, String email) {
@@ -201,7 +208,7 @@ public class BookingService {
         booking.setStatus(BookingStatus.COMPLETED);
         booking.setCompletedAt(LocalDateTime.now());
         Booking saved = bookingRepository.save(booking);
-       // paymentService.createPaidReceipt(saved);
+        paymentService.createPendingPayment(saved);
         return BookingMapper.toResponse(saved);
     }
 

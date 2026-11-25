@@ -2,7 +2,7 @@ import { createContext, useContext, useMemo, useState } from "react";
 import {
   AlertCircle, Car, CheckCircle2, LayoutDashboard, LogOut, Menu, Search, X,
 } from "lucide-react";
-import { IMAGES, rupees, statusClass, statusLabel, stepIndex, STEPS, timeLabel } from "./lib";
+import { IMAGES, statusClass, statusLabel, stepIndex } from "./lib";
 
 const FeedbackContext = createContext({ toast: () => {}, confirm: async () => false });
 export const useFeedback = () => useContext(FeedbackContext);
@@ -198,38 +198,61 @@ export function ProgressTracker({ status, booking = {}, compact = false }) {
   );
 }
 
+
 export function BookingCard({ booking, action, extra }) {
+  const imageBase = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
   const vehicleImage = booking.vehicleImageUrl
     ? booking.vehicleImageUrl.startsWith("http")
       ? booking.vehicleImageUrl
-      : `http://localhost:8080${booking.vehicleImageUrl}`
+      : `${imageBase}${booking.vehicleImageUrl}`
     : IMAGES.car;
 
   return (
     <article className="booking-card">
-      <div className="job-icon"><Car size={20} /></div>
+      <div className="job-icon">
+        <Car size={20} />
+      </div>
+
       <div className="job-copy">
         <Status value={booking.status} />
+
         <h3>#{booking.id} · {booking.serviceName}</h3>
+
         <p>
-          {booking.customerName && <><b>{booking.customerName}</b> · </>}
+          {booking.customerName && (
+            <><b>{booking.customerName}</b> · </>
+          )}
           {booking.vehicleBrand} {booking.vehicleModel} · {booking.vehicleNumber}
         </p>
-        {booking.mechanicNotes && <p className="notes">{booking.mechanicNotes}</p>}
+
+        {booking.mechanicNotes && (
+          <p className="notes">{booking.mechanicNotes}</p>
+        )}
+
         {extra}
       </div>
 
-      <div
-        className="vehicle-thumb"
-        style={{
-          backgroundImage: `linear-gradient(90deg, rgba(11,31,58,.08), transparent), url("${vehicleImage}")`
-        }}
-      />
+      <div className="vehicle-thumb">
+        <img
+          src={vehicleImage}
+          alt={`${booking.vehicleBrand || "Vehicle"} ${booking.vehicleModel || ""}`}
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = IMAGES.car;
+          }}
+        />
+      </div>
 
-      {action}
+      {action && (
+        <div className="booking-action">
+          {action}
+        </div>
+      )}
     </article>
   );
 }
+
 
 export function Toolbar({ query, setQuery, placeholder, children }) {
   return (
