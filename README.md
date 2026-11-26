@@ -1,148 +1,426 @@
-# 🚗 DriveCare – Vehicle Service & Booking Platform
+# 🚗 DriveCare — Vehicle Service & Booking Platform
 
-DriveCare is a full-stack web application designed to simplify vehicle servicing and booking management. It connects customers, mechanics, and administrators through a single platform.
+DriveCare is a full-stack **Vehicle Service & Booking Platform** designed to simplify vehicle servicing by connecting customers, mechanics, and administrators through a centralized system.
 
-The application provides secure authentication, role-based access, service management, vehicle booking, and dashboard functionality.
+Customers can manage their vehicles, book services, track service progress, make online payments, and provide reviews. Mechanics can manage assigned service jobs and update service progress, while administrators manage mechanics, services, bookings, payments, and reports.
 
-## ✨ Features
-
-### 🔐 Authentication & Authorization
-- User registration and login
-- JWT-based authentication
-- Role-based access control
-- Separate portals for Admin, Customer, and Mechanic
-
-### 👨‍💼 Admin Portal
-- Admin dashboard with live statistics
-- Customer and mechanic overview
-- Vehicle and booking statistics
-- Pending bookings overview
-- Revenue summary
-- Operational snapshot
-- Popular services overview
-- Manage bookings, mechanics, services, payments, and reviews
-
-### 👤 Customer Portal
-- Customer dashboard
-- Manage vehicles
-- View available services
-- Book vehicle services
-- Track booking status
-- View payment and booking history
-- Submit reviews and ratings
-
-### 🔧 Mechanic Portal
-- Mechanic dashboard
-- View assigned jobs
-- Track job progress
-- Update service status
-- Manage assigned service tasks
+---
 
 ## 🛠️ Tech Stack
 
-**Frontend**
-- React.js
-- JavaScript
-- HTML5
-- CSS3
-- Vite
-- Lucide React
-
-**Backend**
-- Java
+### Backend
+- Java 17
 - Spring Boot
 - Spring Security
-- Spring Data JPA
-- Hibernate
 - JWT Authentication
-
-**Database**
+- Hibernate / JPA
+- REST APIs
 - MySQL
 
-**Tools**
-- Git & GitHub
+### Frontend
+- React.js
+- HTML5
+- CSS3
+- JavaScript
+
+### Payment
+- Razorpay
+
+### Tools
+- Git
+- GitHub
 - Postman
-- VS Code
 - Spring Tool Suite (STS)
+- VS Code
 
-## 🎨 UI & Design
+---
 
-- Premium automotive-inspired interface
-- Responsive dashboard layout
-- Navy blue, white, and orange color theme
-- Modern cards and dashboard statistics
-- Improved navigation and user experience
-- Separate dashboard layouts for different roles
+## 🏗️ Architecture
+
+```text
+                    React.js
+                       │
+                       ▼
+                  REST APIs
+                       │
+                       ▼
+                  Controller
+                       │
+                       ▼
+                    Service
+                       │
+                       ▼
+                  Repository
+                       │
+                       ▼
+                 Hibernate/JPA
+                       │
+                       ▼
+                    MySQL
+```
+
+### Request Flow
+
+```text
+Client Request
+      ↓
+Controller
+      ↓
+Service Layer
+      ↓
+Repository
+      ↓
+Hibernate / JPA
+      ↓
+MySQL Database
+      ↓
+Response
+      ↓
+React.js UI
+```
+
+---
+
+## 🔐 Authentication & Authorization
+
+DriveCare uses **JWT-based authentication with Spring Security** to secure REST APIs and provide role-based access.
+
+```text
+Login
+  ↓
+Credentials Validation
+  ↓
+JWT Token Generated
+  ↓
+Authorization: Bearer <token>
+  ↓
+JwtAuthenticationFilter
+  ↓
+JWT Validation
+  ↓
+SecurityContext
+  ↓
+Role-Based Authorization
+  ↓
+Protected API Access
+```
+
+### Security Features
+
+- JWT-based stateless authentication
+- Spring Security
+- BCrypt password encryption
+- Role-based authorization
+- Protected REST APIs
+- Public and secured endpoints
+- Authentication and authorization validation
+
+---
+
+## 👥 User Roles
+
+### 👨‍💼 ADMIN
+
+```text
+ADMIN
+ ├── Manage Users
+ ├── Manage Mechanics
+ ├── Manage Services
+ ├── Manage Bookings
+ ├── Assign Mechanics
+ ├── Manage Payments
+ └── View Reports
+```
+
+### 👤 CUSTOMER
+
+```text
+CUSTOMER
+ ├── Register / Login
+ ├── Manage Vehicles
+ ├── Browse Services
+ ├── Book Vehicle Service
+ ├── Select Date & Time
+ ├── Track Service
+ ├── Make Payment
+ ├── View Service History
+ └── Submit Rating & Review
+```
+
+### 🔧 MECHANIC
+
+```text
+MECHANIC
+ ├── Login
+ ├── View Assigned Jobs
+ ├── Start Service
+ ├── Update Service Status
+ ├── Add Service Notes
+ ├── Maintain Checklist
+ └── Complete Service
+```
+
+---
+
+## 🔄 Service Booking Flow
+
+```text
+Customer
+    ↓
+Select Vehicle
+    ↓
+Select Service
+    ↓
+Select Date & Time
+    ↓
+Create Booking
+    ↓
+Admin Reviews Booking
+    ↓
+Mechanic Assigned
+    ↓
+Mechanic Starts Service
+    ↓
+IN_PROGRESS
+    ↓
+Service Completed
+    ↓
+Payment
+    ↓
+Review & Rating
+```
+
+---
+
+## 📌 Service Status Flow
+
+```text
+BOOKED
+   ↓
+MECHANIC_ASSIGNED
+   ↓
+IN_PROGRESS
+   ↓
+COMPLETED
+```
+
+This allows customers and administrators to track the complete service lifecycle.
+
+---
+
+## 💳 Razorpay Payment Integration
+
+DriveCare integrates **Razorpay** for online payment processing.
+
+```text
+Customer
+    ↓
+Service Booking
+    ↓
+Payment Initiated
+    ↓
+Razorpay Checkout
+    ↓
+Payment Verification
+    ↓
+Payment Status Updated
+    ↓
+Booking / Service Payment Completed
+```
+
+---
+
+## 🗄️ Database
+
+DriveCare uses **MySQL** as the relational database and **Hibernate/JPA** for database operations.
+
+### Main Entities
+
+```text
+User
+Vehicle
+Mechanic
+Service
+Booking
+Payment
+Review
+```
+
+Hibernate/JPA is used to map Java entities to database tables and manage CRUD operations and entity relationships.
+
+---
 
 ## 📁 Project Structure
 
 ```text
-DriveCare/
+DriveCare
 │
-├── backend/
-│   └── src/
-│       └── main/
-│           ├── java/
-│           └── resources/
+├── backend
+│   └── src/main/java
+│       └── ...
+│           ├── controller
+│           ├── service
+│           ├── repository
+│           ├── entity
+│           ├── dto
+│           ├── security
+│           ├── config
+│           └── exception
 │
-├── frontend/
-│   ├── src/
-│   │   ├── App.jsx
-│   │   ├── api.js
-│   │   ├── main.jsx
-│   │   ├── LandingPage.jsx
-│   │   ├── LandingPage.css
-│   │   └── styles.css
-│   │
-│   ├── package.json
-│   └── index.html
+├── frontend
+│   └── src
+│       ├── components
+│       ├── pages
+│       ├── services
+│       └── ...
+│
+├── docs
+│   └── screenshots
 │
 └── README.md
 ```
 
-## ⚙️ Installation & Setup
+---
 
-### 1. Clone the Repository
+## 📸 Screenshots
 
-```bash
-git clone https://github.com/nehakore23/DriveCare.git
-cd DriveCare
-```
+### 🏠 Landing Page
 
-### 2. Backend Setup
+![Landing Page](docs/screenshots/landing-page.png)
 
-- Open the backend project in Spring Tool Suite or IntelliJ IDEA.
-- Configure MySQL database credentials in `application.properties`.
-- Create the database:
+### 🔐 Login
 
-```sql
-CREATE DATABASE drivecare;
-```
+![Login](docs/screenshots/login.png)
 
-- Run the Spring Boot application.
+### 👤 Customer Dashboard
 
-### 3. Frontend Setup
+![Customer Dashboard](docs/screenshots/customer-dashboard.png)
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+### 🚗 Vehicle Management
 
-Open the frontend using the local URL displayed in the terminal.
+![Vehicle Management](docs/screenshots/vehicles.png)
 
-## 🔒 Security
+### 📅 Service Booking
 
+![Service Booking](docs/screenshots/booking.png)
+
+### 🔄 Service Tracking
+
+![Service Tracking](docs/screenshots/service-tracking.png)
+
+### 💳 Payment
+
+![Payment](docs/screenshots/payment.png)
+
+### 🔧 Mechanic Dashboard
+
+![Mechanic Dashboard](docs/screenshots/mechanic-dashboard.png)
+
+### 👨‍💼 Admin Dashboard
+
+![Admin Dashboard](docs/screenshots/admin-dashboard.png)
+
+### 📊 Reports
+
+![Reports](docs/screenshots/reports.png)
+
+### 🧾 Invoice
+
+![Invoice](docs/screenshots/invoice.png)
+
+---
+
+## 🚀 Key Features
+
+- User registration and login
 - JWT-based authentication
-- Password encryption using BCrypt
 - Role-based authorization
-- Protected API endpoints
-- Secure access to role-specific functionality
+- Customer vehicle management
+- Vehicle service booking
+- Date and time selection
+- Mechanic assignment
+- Mechanic service management
+- Service status tracking
+- Service history
+- Online Razorpay payment
+- Ratings and reviews
+- Admin dashboard
+- Mechanic dashboard
+- Customer dashboard
+- Reports and invoice management
+- RESTful API architecture
 
-## 🚀 Project Status
+---
+
+## 🧪 API Testing
+
+REST APIs are tested using **Postman**.
+
+The APIs cover:
+
+```text
+Authentication
+Users
+Vehicles
+Mechanics
+Services
+Bookings
+Payments
+Reviews
+```
+
+---
+
+## 🔑 Example Authentication Request
+
+After successful login, the server generates a JWT token.
+
+The token is sent with protected requests using:
+
+```http
+Authorization: Bearer <JWT_TOKEN>
+```
+
+Spring Security validates the token through the `JwtAuthenticationFilter` before allowing access to secured endpoints.
+
+---
+
+## 🎯 Project Objective
+
+The main objective of DriveCare is to provide a centralized platform for managing vehicle servicing operations.
+
+The system reduces manual booking processes and provides:
+
+- Faster service booking
+- Centralized vehicle records
+- Better mechanic assignment
+- Real-time service status tracking
+- Secure authentication
+- Online payment support
+- Digital service history
+- Customer feedback and reviews
+- Administrative reporting
+
+---
+
+## 👩‍💻 Developed By
+
+**Neha Kore**
+
+**MCA | PG-DAC | Java Developer**
+
+### Technologies
+
+```text
+Java | Spring Boot | Spring Security | JWT
+Hibernate | JPA | MySQL | React.js
+REST APIs | Razorpay
+```
+
+---
+
+## ⭐ Project Status
 
 **Currently in Development**
 
-The core backend functionality, authentication, role-based portals, and dashboard UI are being developed and enhanced. Further improvements include responsive UI refinements and additional booking and service management features.
-
-⭐ If you find this project interesting, feel free to explore the repository!
+DriveCare is being continuously enhanced with additional dashboard features, service management functionality, payment integration, reporting, and UI improvements.
