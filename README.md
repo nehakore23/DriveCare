@@ -407,8 +407,6 @@ The system reduces manual booking processes and provides:
 
 **Neha Kore**
 
-**MCA | PG-DAC | Java Developer**
-
 ### Technologies
 
 ```text
